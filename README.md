@@ -1,4 +1,4 @@
 # SALT
 
 - Palvelinten hallinta kurssi
-- Docker state
+- Docker salt module
