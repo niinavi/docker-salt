@@ -36,3 +36,13 @@ import-docker-key2:
       - containerd.io
 ```
 
+![](https://github.com/niinavi/salt/blob/master/documents/pics/succeeded-docker-inst.JPG)
+
+With following command, I tested if Docker runs correctly on minion.
+```
+sudo docker run hello-world
+```
+
+![](https://github.com/niinavi/salt/blob/master/documents/pics/docker-hello-world-testi.JPG)
+
+
