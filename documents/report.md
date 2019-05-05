@@ -13,7 +13,6 @@ I started creating salt state for Docker by first installing Docker manually. I 
 This is the first salt state I created and it succesfully installed the Docker.
 
 ```
-
 install_network_packages:
   pkg.installed:
    - pkgs:
@@ -23,12 +22,16 @@ install_network_packages:
       - gnupg-agent
       - software-properties-common
 
+
 import-docker-key:
   cmd.run:
-    - name: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-$
-import-docker-key2:
+    - name: curl -fsSL https://download.docker.com/linux/ubuntu/gpg |  sudo apt-key add -
+
+add-docker-rep:
   cmd.run:
-     - name: sudo add-apt-repository "deb [arch=amd64] https://download.docker.$docker-packages:
+     - name: sudo add-apt-repository  "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+
+docker-packages:
   pkg.installed:
     - pkgs:
       - docker-ce
