@@ -10,7 +10,11 @@
 
 I started creating salt state for Docker by first installing Docker manually. I followed instructions for manual installation for Docker from their [documentation](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
 
-This is the first salt state I created and it succesfully installed the Docker.
+I had master installed on DigitalOcean and I installed minion on VirtualBox. I installed minion using a shell script that can be found [here](https://github.com/niinavi/salt/blob/master/srv/minion.sh). I accepted the salt-keys on master with command ``` sudo salt-key -A```
+
+First I installed necessary packages (curl, ca-certificates etc) and tried if it worked. I run the salt command ``` sudo salt 'dockerminion' state.highstate```. I imported the docker key, added Docker repository and installed the packages.
+
+This is the salt state that succesfully installed the Docker.
 
 ```
 install_network_packages:
