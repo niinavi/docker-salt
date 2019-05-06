@@ -8,7 +8,7 @@
 
 ## Salt State
 
-I started creating salt state for Docker by first installing Docker manually. I followed instructions for manual installation for Docker [here](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
+I started creating salt state for Docker by first installing Docker manually. I followed instructions for manual installation for Docker from their [documentation](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
 
 This is the first salt state I created and it succesfully installed the Docker.
 
@@ -148,8 +148,146 @@ I need to specify the port. I run the following command:
 ```
 sudo docker run -p 80:80 apachekontti
 ```
-
-SCREENSHOT.
-
 I managed to make the docker container to work manually. Next thing is to create salt state for it. 
+
+### Automate installation
+
+I need to create a directory on minion where is Dockerfile and index.html. I added following lines to init.sls. 
+```
+create_directory:
+  file.directory:
+    - name: /docker/
+
+/docker/Dockerfile:
+  file.managed:
+    - source: salt://docker/Dockerfile
+
+/docker/index.html:
+  file.managed:
+    - source: salt://docker/index.html
+
+```
+I run the init.sls and succesfylly get the index.html and Dockerfile installed on minion. Next I needed to see if I can build an image using that Dockerfile.
+
+I found some help from Saltstack documentation how to build image. https://docs.saltstack.com/en/latest/ref/states/all/salt.states.docker_image.html
+
+I added following line into init.sls:
+```
+build_image:
+  docker_image.present:
+    - build: /docker/image
+    - tag: apachekontti
+    - dockerfile: Dockerfile.alternative
+
+```
+
+I got following error:
+```
+-
+          ID: build_image
+    Function: docker_image.present
+      Result: False
+     Comment: State 'docker_image.present' was not found in SLS 'docker'
+              Reason: 'docker_image' __virtual__ returned False: 'docker.version' is not available.
+     Changes:
+```
+
+This error is received because I don't have pip and docker-python installed. 
+
+I add the following line to init.sls and hope the best.
+https://stackoverflow.com/questions/33270253/salt-dockerng-virtual-returned-false
+```
+python-pip:
+  pkg.installed
+
+docker-py:
+  pip.installed:
+    - require:
+      - pkg: python-pip
+```
+
+This didn't succeed and I got a new error to look at. Python-pip didn't get installed.
+
+```
+ ID: docker-py
+    Function: pip.installed
+      Result: False
+     Comment: An importable Python 2 pip module is required but could not be found on your system. This usually means that the system's pip package is not installed properly.
+     Started: 13:00:27.824419
+    Duration: 3.753 ms
+     Changes:
+```
+
+For the pip.installed I will need python2. I got help from here: https://github.com/saltstack/salt/issues/40048
+
+```
+install-python-pip:
+  pkg.installed:
+    - pkgs:
+      - python-pip
+      - python3
+      - python3-pip
+    - reload_modules: true
+
+docker-py:
+  pip.installed:
+    - require:
+      - pkg: install-python-pip
+```
+I wonder was it after all only about python3..
+The following error was received because I had accidentally left the Dockerfile.alternative.
+
+```
+ ID: build_image
+    Function: docker_image.present
+      Result: False
+     Comment: Encountered error building /docker/. as build_image:latest: 500 Server Error: Internal Server Error for url: http+docker://localunixsocket/v1.39/build?t=build_image%3Alatest&q=False&nocache=False&rm=True&forcerm=False&pull=False&dockerfile=Dockerfile.alternative
+     Started: 14:22:20.002164
+    Duration: 177.362 ms
+     Changes:
+```
+
+These were the working lines to build image with Saltstack:
+
+ 
+```
+build_image:
+  docker_image.present:
+    - build: /docker/.
+    - tag: apachekontti
+    - dockerfile: Dockerfile
+
+```
+
+The next thing was to run the container from the image. 
+
+Got some help from here:
+https://docs.saltstack.com/en/latest/ref/states/all/salt.states.docker_container.html#salt.states.docker_container.run
+```
+run_container:
+  docker_container.running:
+    - name: kontti
+    - image: build_image
+    - port_bindings:
+      - 80:80
+```
+I first tried to specify the IP to be localhost, but I got an error that the IP is incorrect. So I just left the ports and it worked. The first port number is the container port number and it will be mapped to the second port 80 on Docker host.
+
+The salt state can be found here:
+https://github.com/niinavi/salt/tree/master/srv
+
+-------
+
+sources:
+
+https://opsnotice.xyz/docker-with-saltstack/  
+https://docs.saltstack.com/en/latest/ref/states/all/salt.states.docker_container.html#salt.states.docker_container.run  
+https://github.com/saltstack/salt/issues/40048  
+https://stackoverflow.com/questions/33270253/salt-dockerng-virtual-returned-false  
+https://docs.saltstack.com/en/latest/ref/states/all/salt.states.docker_image.html  
+https://medium.com/faun/how-to-build-a-docker-container-from-scratch-docker-basics-a-must-know-395cba82897b   
+https://download.docker.com/linux/ubuntu/dists/bionic/pool/stable/amd64/  
+https://docs.saltstack.com/en/latest/ref/states/all/salt.states.pkgrepo.html  
+https://docs.docker.com/install/linux/docker-ce/ubuntu/
+
 
