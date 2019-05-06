@@ -273,6 +273,7 @@ run_container:
 ```
 I first tried to specify the IP to be localhost, but I got an error that the IP is incorrect. So I just left the ports and it worked. The first port number is the container port number and it will be mapped to the second port 80 on Docker host.
 
+## The final salt state
 The salt state can be found here:
 https://github.com/niinavi/salt/tree/master/srv
 
