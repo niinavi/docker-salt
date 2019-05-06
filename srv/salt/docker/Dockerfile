@@ -18,10 +18,4 @@ RUN mkdir -p $APACHE_LOG_DIR
 COPY index.html /var/www/html
 
 EXPOSE 80
-#RUN mkdir /var/run/apache2
-#RUN sudo a2dismod php7.2
-#RUN sudo a2enmod php7.2
-
-
-#ENV APACHE_RUN_DIR   /var/run/apache2
 CMD ["/usr/sbin/apache2", "-D", "FOREGROUND"]
