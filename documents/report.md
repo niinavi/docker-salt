@@ -405,6 +405,94 @@ Above error means that I had a wrong name specified on the run function.
 
 ![](https://github.com/niinavi/salt/blob/master/documents/pics/bothcontainers-minion.JPG)
 
+# Results
+
+I succesfully installed two containers on minion. However, the salt state that I created is not working perfectly.
+
+I need to run the command ```sudo salt 'dockerminion' state.highstate``` twice. The first time it doesn't build the images and run the containers. The second time the salt state works and the images are created and the containers are running.
+
+I found the problem when I run the salt state on the new and clean minion. I had tried the salt state with one minion and only removed Docker containers and Docker-ce, Docker-ce-cli and containerd.io. I had forgotten to remove pip and docker-py so maybe they have something to do with the error..
+
+I tried to run the salt state with and without pip and docker-py on new minion. 
+
+```
+install-python-pip:
+  pkg.installed:
+    - pkgs:
+      - python-pip
+      - python3
+      - python3-pip
+
+docker-py:
+  pip.installed:
+    - require:
+      - pkg: install-python-pip
+```
+
+**1. try: 
+```
+Summary for dockerminion7
+-------------
+Succeeded: 12 (changed=12)
+Failed:     4
+-------------
+```
+
+error: 
+```
+"  Comment: State 'docker_container.running' was not found in SLS 'apache2-cont2'
+              Reason: 'docker_container' __virtual__ returned False: 'docker.version' is not available."
+```
+
+**2. try:
+```
+Summary for dockerminion7
+-------------
+Succeeded: 16 (changed=6)
+Failed:     0
+-------------
+```
+
+I uncommented install-python-pip and docker-py. The failed results was expected since I read they are needed.
+
+**1. try**
+```
+Summary for dockerminion8
+-------------
+Succeeded: 10 (changed=10)
+Failed:     4
+-------------
+```
+error:
+```
+  ID: run_container2
+    Function: docker_container.running
+        Name: kontti2
+      Result: False
+     Comment: State 'docker_container.running' was not found in SLS 'apache2-cont2'
+              Reason: 'docker_container' __virtual__ returned False: 'docker.version' is not available.
+     Changes:
+```
+**2. try**
+```
+Summary for dockerminion8
+-------------
+Succeeded: 10 (changed=2)
+Failed:     4
+-------------
+```
+```
+ ID: run_container2
+    Function: docker_container.running
+        Name: kontti2
+      Result: False
+     Comment: State 'docker_container.running' was not found in SLS 'apache2-cont2'
+              Reason: 'docker_container' __virtual__ returned False: 'docker.version' is not available.
+     Changes:
+```
+
+
+
 # The final salt state
 The salt state can be found here:
 https://github.com/niinavi/salt/tree/master/srv
