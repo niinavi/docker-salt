@@ -20,6 +20,23 @@ More information about Docker can be found here:
 https://www.docker.com/why-docker  
 https://docker-hy.github.io/part1/  
 
+## Environment
+
+Master:
+Droplet on DigitalOcean
+OS: Ubuntu 18.04.2 LTS
+Intel(R) Xeon(R) CPU E5-2650L v3 @ 1.80GHz
+salt version 2017.7.4 (Nitrogen)
+
+Minion:
+ Lenovo Thinkpad x250
+VirtualBox and Ubuntu 18.04
+salt version 2017.7.4
+Intel(R) Core(TM) i5-5300U CPU @ 2.30GHz
+
+
+![](https://github.com/niinavi/salt/blob/master/documents/pics/docker-salt-environment.png)
+
 # Install Docker
 
 I started creating salt state for Docker by first installing Docker manually. I followed instructions for manual installation for Docker from their [documentation](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
