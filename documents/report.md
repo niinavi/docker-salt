@@ -1,8 +1,8 @@
 
 # Docker and Salt
-Niina Villman
-*Haaga-Helia University of Applied Science*
-*Palvelinten hallinta -course 2019: http://terokarvinen.com/*
+Niina Villman  
+*Haaga-Helia University of Applied Science*  
+*Palvelinten hallinta -course 2019: http://terokarvinen.com/*  
 
 ## What is Docker?
 
@@ -16,9 +16,9 @@ Niina Villman
 - Dockerfile containes instructions for creating an image
 - by running the image you can create a container
 
-More information about Docker can be found here:
+More information about Docker can be found here:  
 https://www.docker.com/why-docker  
-https://docker-hy.github.io/part1/
+https://docker-hy.github.io/part1/  
 
 # Install Docker
 
