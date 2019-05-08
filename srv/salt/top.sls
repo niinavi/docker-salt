@@ -1,4 +1,5 @@
 base:
   'dockerminion':
-    - docker
-
+    - docker-inst
+    - apache2-cont
+    - apache2-cont2
