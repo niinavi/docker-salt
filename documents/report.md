@@ -1,12 +1,26 @@
-# Docker and Salt report
 
+# Docker and Salt
+Niina Villman
+*Haaga-Helia University of Applied Science*
+*Palvelinten hallinta -course 2019: http://terokarvinen.com/*
 
 ## What is Docker?
+
+- Container platform
+- Creates containers which makes it easy to tranfer an application to another environment
+- Containers are isolated environments on the host machine
 
 
 ## What is Dockerfile?
 
-## Salt State
+- Dockerfile containes instructions for creating an image
+- by running the image you can create a container
+
+More information about Docker can be found here:
+https://www.docker.com/why-docker  
+https://docker-hy.github.io/part1/
+
+# Install Docker
 
 I started creating salt state for Docker by first installing Docker manually. I followed instructions for manual installation for Docker from their [documentation](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
 
@@ -109,7 +123,7 @@ I received this error and decided to see if I need to replace the "name" URL wit
 
 --------
 
-# Dockerfile
+# Create Dockerfile
 
 
 I created Dockerfile that creates a image for ubuntu and Apache2. I followed instructions here: https://medium.com/faun/how-to-build-a-docker-container-from-scratch-docker-basics-a-must-know-395cba82897b 
@@ -154,7 +168,8 @@ sudo docker run -p 80:80 apachekontti
 ```
 I managed to make the docker container to work manually. Next thing is to create salt state for it. 
 
-### Automate installation
+
+# Automate installation
 
 I need to create a directory on minion where is Dockerfile and index.html. I added following lines to init.sls. 
 ```
@@ -239,6 +254,9 @@ docker-py:
       - pkg: install-python-pip
 ```
 I wonder was it after all only about python3..
+
+
+
 The following error was received because I had accidentally left the Dockerfile.alternative.
 
 ```
@@ -251,7 +269,7 @@ The following error was received because I had accidentally left the Dockerfile.
      Changes:
 ```
 
-These were the working lines to build image with Saltstack:
+These were the lines that worked to build image with Saltstack:
 
  
 ```
@@ -262,6 +280,8 @@ build_image:
     - dockerfile: Dockerfile
 
 ```
+
+![](https://github.com/niinavi/salt/blob/master/documents/pics/build_image_docker_success.JPG)
 
 The next thing was to run the container from the image. 
 
@@ -275,16 +295,124 @@ run_container:
     - port_bindings:
       - 80:80
 ```
-I first tried to specify the IP to be localhost, but I got an error that the IP is incorrect. So I just left the ports and it worked. The first port number is the container port number and it will be mapped to the second port 80 on Docker host.
+I first tried to specify the IP to be localhost, but I got an error that the IP is incorrect. So I just left the ports and it worked. The first port number is the host port and the second container port.
 
-## The final salt state
+![](https://github.com/niinavi/salt/blob/master/documents/pics/min-kontti-running.JPG)
+
+At this moment the salt state was following:
+
+```
+install_network_packages:
+  pkg.installed:
+   - pkgs:
+      - curl
+      - apt-transport-https
+      - ca-certificates
+      - gnupg-agent
+      - software-properties-common
+
+
+import-docker-key:
+  cmd.run:
+    - name: curl -fsSL https://download.docker.com/linux/ubuntu/gpg |  sudo apt-key add -
+
+add-docker-rep:
+  cmd.run:
+     - name: sudo add-apt-repository  "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+
+docker-packages:
+  pkg.installed:
+    - pkgs:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+
+
+install-python-pip:
+  pkg.installed:
+    - pkgs:
+      - python-pip
+      - python3
+      - python3-pip
+    - reload_modules: true
+
+docker-py:
+  pip.installed:
+    - require:
+      - pkg: install-python-pip
+
+create_directory:
+  file.directory:
+    - name: /docker/
+
+/docker/Dockerfile:
+  file.managed:
+    - source: salt://docker/Dockerfile
+
+/docker/index.html:
+  file.managed:
+    - source: salt://docker/index.html
+
+build_image:
+  docker_image.present:
+    - build: /docker/.
+    - tag: apachekontti
+    - dockerfile: Dockerfile
+
+run_container:
+  docker_container.running:
+    - name: kontti
+    - image: build_image
+    - port_bindings:
+      - 80:80
+```
+
+------
+
+# Continue automating and create two containers
+
+
+However, I wanted to separate the installation of Docker and building and running the container. It would make it possible to create more containers using the same installation state. So the next thing was to try to install and run two Apache2 containers on minion. 
+
+ - one salt state for Docker installation
+ - one salt state for building and running a containter
+ - change top.sls
+
+I encountered a few errors while trying to build another image and run it. Following error appeared when I had the the same ports defined on the second Apache2 container. This error was better explained when I tried to run Docker container manually on minion. Then I got the exact information about the port that is not available anymore. I needed to change the host port.
+```
+----------
+          ID: run_container2
+    Function: docker_container.running
+        Name: kontti2
+      Result: False
+     Comment: Failed to start container 'kontti2': 'Unable to perform start: 500 Server Error: Internal Server Error for url: http+docker://localunixsocket/v1.39/containers/kontti2/start'
+     Started: 16:02:22.201252
+    Duration: 1065.494 ms
+     Changes:
+```
+```
+          ID: run_container2
+    Function: docker_container.running
+        Name: kontti2
+      Result: False
+     Comment: Failed to pull apacheimage2: Unable to perform pull: 404 Client Error: Not Found for url: http+docker://localunixsocket/v1.39/images/create?tag=latest&fromImage=apacheimage2
+     Started: 20:46:04.347707
+    Duration: 2722.205 ms
+     Changes:
+```
+
+Above error means that I had a wrong name specified on the run function.
+
+![](https://github.com/niinavi/salt/blob/master/documents/pics/bothcontainers-minion.JPG)
+
+# The final salt state
 The salt state can be found here:
 https://github.com/niinavi/salt/tree/master/srv
 
 -------
 
 sources:
-
+https://docker-hy.github.io/part1/
 https://opsnotice.xyz/docker-with-saltstack/  
 https://docs.saltstack.com/en/latest/ref/states/all/salt.states.docker_container.html#salt.states.docker_container.run  
 https://github.com/saltstack/salt/issues/40048  
