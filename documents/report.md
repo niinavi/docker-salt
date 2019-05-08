@@ -429,7 +429,7 @@ docker-py:
       - pkg: install-python-pip
 ```
 
-**1. try: 
+**1. try:**
 ```
 Summary for dockerminion7
 -------------
@@ -438,13 +438,12 @@ Failed:     4
 -------------
 ```
 
-error: 
 ```
 "  Comment: State 'docker_container.running' was not found in SLS 'apache2-cont2'
               Reason: 'docker_container' __virtual__ returned False: 'docker.version' is not available."
 ```
 
-**2. try:
+**2. try:**
 ```
 Summary for dockerminion7
 -------------
@@ -463,7 +462,6 @@ Succeeded: 10 (changed=10)
 Failed:     4
 -------------
 ```
-error:
 ```
   ID: run_container2
     Function: docker_container.running
